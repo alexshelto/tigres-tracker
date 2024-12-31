@@ -56,3 +56,40 @@ func AddSongAndIncrementUser(db *gorm.DB, songName string, guildId uint, request
 
 	return nil
 }
+
+// TopSongsByCount retrieves the top songs by the number of requests
+func TopSongsByCount(db *gorm.DB, limit int) ([]models.Song, error) {
+	var songs []models.Song
+
+	// Query to get top songs by song count, ordered by the number of requests
+	err := db.Model(&models.Song{}).
+		Select("song_name, COUNT(*) as count").
+		Group("song_name").
+		Order("count DESC").
+		Limit(limit).
+		Find(&songs).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("error fetching top songs: %v", err)
+	}
+
+	return songs, nil
+}
+
+func TopSongsByUser(db *gorm.DB, userId uint, limit int) ([]models.Song, error) {
+	var songs []models.Song
+
+	err := db.Model(&models.Song{}).
+		Select("song_name, COUNT(*) as count").
+		Where("requested_by = ?", userId).
+		Group("song_name").
+		Order("count DESC").
+		Limit(limit).
+		Find(&songs).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("error fetching top songs by user: %v", err)
+	}
+
+	return songs, nil
+}

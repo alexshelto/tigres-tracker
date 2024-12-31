@@ -47,3 +47,61 @@ func TestAddSongAndIncrementUser(t *testing.T) {
 	// Check that the song count is incremented
 	assert.Equal(t, 2, user.SongCount)
 }
+
+func TestTopSongsByCount(t *testing.T) {
+	// Setup a test database (in-memory or temporary file)
+	db.ConnectDB(":memory:") // For in-memory DB
+
+	// Ensure tables are created in the test DB
+	db.GetDB().AutoMigrate(&models.User{}, &models.Song{})
+
+	// Add some songs and increment song counts
+	err := db.AddSongAndIncrementUser(db.GetDB(), "Song1", 999, 12345)
+	assert.NoError(t, err)
+	err = db.AddSongAndIncrementUser(db.GetDB(), "Song1", 999, 12345)
+	assert.NoError(t, err)
+	err = db.AddSongAndIncrementUser(db.GetDB(), "Song2", 999, 123456)
+	assert.NoError(t, err)
+
+	// Fetch top songs by song count
+	songs, err := db.TopSongsByCount(db.GetDB(), 5)
+	assert.NoError(t, err)
+	assert.Len(t, songs, 2, "Expected two songs to be returned")
+	assert.Equal(t, "Song1", songs[0].SongName, "Expected Song1 to be the most requested")
+	assert.Equal(t, "Song2", songs[1].SongName, "Expected Song2 to be the second most requested")
+}
+
+func TestTopSongsByUser(t *testing.T) {
+	db.ConnectDB(":memory:") // For in-memory DB
+
+	// Ensure tables are created in the test DB
+	db.GetDB().AutoMigrate(&models.User{}, &models.Song{})
+
+	// Add some songs and increment song counts
+	for i := 0; i < 10; i++ {
+		err := db.AddSongAndIncrementUser(db.GetDB(), "SongA", 999, 1)
+		assert.NoError(t, err)
+	}
+	for i := 0; i < 15; i++ {
+		err := db.AddSongAndIncrementUser(db.GetDB(), "SongB", 999, 1)
+		assert.NoError(t, err)
+	}
+	for i := 0; i < 5; i++ {
+		err := db.AddSongAndIncrementUser(db.GetDB(), "SongC", 999, 1)
+		assert.NoError(t, err)
+	}
+
+	// Different user
+	for i := 0; i < 20; i++ {
+		err := db.AddSongAndIncrementUser(db.GetDB(), "Song1", 999, 2)
+		assert.NoError(t, err)
+	}
+
+	songs, err := db.TopSongsByUser(db.GetDB(), 1, 4)
+	assert.NoError(t, err)
+	assert.Len(t, songs, 3, "Expected two songs to be returned")
+	assert.Equal(t, "SongB", songs[0].SongName, "Expected songB to be most requested")
+	assert.Equal(t, "SongA", songs[1].SongName, "Expected songA to be second most requested")
+	assert.Equal(t, "SongC", songs[2].SongName, "Expected songC to be second most requested")
+
+}
