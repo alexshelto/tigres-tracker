@@ -17,5 +17,5 @@ func main() {
 	log.Println("Bot token: ", botConfig.BotToken)
 	log.Println("DB File: ", dbConfig.DatabaseFile)
 
-	db.ConnectDB()
+	db.ConnectDB(dbConfig.DatabaseFile)
 }

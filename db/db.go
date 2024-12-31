@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/alexshelto/tigres-tracker/config"
 	"github.com/alexshelto/tigres-tracker/db/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -12,10 +11,9 @@ import (
 
 var DB *gorm.DB
 
-func ConnectDB() {
-	cfg := config.LoadDBConfig()
-
-	DB, err := gorm.Open(sqlite.Open(cfg.DatabaseFile), &gorm.Config{})
+func ConnectDB(databaseFile string) {
+	var err error
+	DB, err = gorm.Open(sqlite.Open(databaseFile), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Error connecting to the database: ", err)
 	}
@@ -28,7 +26,11 @@ func ConnectDB() {
 	fmt.Println("Database connected and tables migrated.")
 }
 
-func AddSongAndIncrementUser(songName string, guildId uint, requestedByID uint) error {
+func GetDB() *gorm.DB {
+	return DB
+}
+
+func AddSongAndIncrementUser(db *gorm.DB, songName string, guildId uint, requestedByID uint) error {
 	song := models.Song{
 		SongName:    songName,
 		RequestedBy: requestedByID,
@@ -36,17 +38,17 @@ func AddSongAndIncrementUser(songName string, guildId uint, requestedByID uint) 
 	}
 
 	// Create song in DB
-	if err := song.CreateSong(DB); err != nil {
+	if err := song.CreateSong(db); err != nil {
 		return fmt.Errorf("error creating song: %v", err)
 	}
 
-	user, err := models.GetOrCreateUser(DB, requestedByID)
+	user, err := models.GetOrCreateUser(db, requestedByID)
 	if err != nil {
 		return fmt.Errorf("error getting or creating user: %v", err)
 	}
 
 	// Increment the user's song count
-	if err := user.IncrementSongCount(DB); err != nil {
+	if err := user.IncrementSongCount(db); err != nil {
 		return fmt.Errorf("error incrementing song count: %v", err)
 	}
 
