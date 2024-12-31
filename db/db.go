@@ -30,10 +30,11 @@ func GetDB() *gorm.DB {
 	return DB
 }
 
-func AddSongAndIncrementUser(db *gorm.DB, songName string, guildId uint, requestedByID uint) error {
+func AddSongAndIncrementUser(db *gorm.DB, songName string, guildId uint, requestedByID uint, messageId string) error {
 	song := models.Song{
 		SongName:    songName,
 		RequestedBy: requestedByID,
+		MessageID:   messageId,
 		GuildId:     guildId,
 	}
 

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/alexshelto/tigres-tracker/db"
@@ -21,7 +22,7 @@ func TestAddSongAndIncrementUser(t *testing.T) {
 	requestedByID := uint(1)
 
 	// Call AddSongAndIncrementUser function
-	err := db.AddSongAndIncrementUser(db.GetDB(), songName, guildId, requestedByID)
+	err := db.AddSongAndIncrementUser(db.GetDB(), songName, guildId, requestedByID, "1")
 	assert.Nil(t, err)
 
 	var user models.User
@@ -40,7 +41,7 @@ func TestAddSongAndIncrementUser(t *testing.T) {
 
 	// Add another song, check incremented
 	// Call AddSongAndIncrementUser function
-	err = db.AddSongAndIncrementUser(db.GetDB(), songName, guildId, requestedByID)
+	err = db.AddSongAndIncrementUser(db.GetDB(), songName, guildId, requestedByID, "2")
 	assert.Nil(t, err)
 
 	db.GetDB().First(&user, "discord_id = ?", requestedByID)
@@ -56,11 +57,11 @@ func TestTopSongsByCount(t *testing.T) {
 	db.GetDB().AutoMigrate(&models.User{}, &models.Song{})
 
 	// Add some songs and increment song counts
-	err := db.AddSongAndIncrementUser(db.GetDB(), "Song1", 999, 12345)
+	err := db.AddSongAndIncrementUser(db.GetDB(), "Song1", 999, 12345, "1")
 	assert.NoError(t, err)
-	err = db.AddSongAndIncrementUser(db.GetDB(), "Song1", 999, 12345)
+	err = db.AddSongAndIncrementUser(db.GetDB(), "Song1", 999, 12345, "2")
 	assert.NoError(t, err)
-	err = db.AddSongAndIncrementUser(db.GetDB(), "Song2", 999, 123456)
+	err = db.AddSongAndIncrementUser(db.GetDB(), "Song2", 999, 123456, "3")
 	assert.NoError(t, err)
 
 	// Fetch top songs by song count
@@ -79,21 +80,25 @@ func TestTopSongsByUser(t *testing.T) {
 
 	// Add some songs and increment song counts
 	for i := 0; i < 10; i++ {
-		err := db.AddSongAndIncrementUser(db.GetDB(), "SongA", 999, 1)
+		id := strconv.Itoa(i)
+		err := db.AddSongAndIncrementUser(db.GetDB(), "SongA", 999, 1, id)
 		assert.NoError(t, err)
 	}
 	for i := 0; i < 15; i++ {
-		err := db.AddSongAndIncrementUser(db.GetDB(), "SongB", 999, 1)
+		id := strconv.Itoa(10 + i)
+		err := db.AddSongAndIncrementUser(db.GetDB(), "SongB", 999, 1, id)
 		assert.NoError(t, err)
 	}
 	for i := 0; i < 5; i++ {
-		err := db.AddSongAndIncrementUser(db.GetDB(), "SongC", 999, 1)
+		id := strconv.Itoa(100 + i)
+		err := db.AddSongAndIncrementUser(db.GetDB(), "SongC", 999, 1, id)
 		assert.NoError(t, err)
 	}
 
 	// Different user
 	for i := 0; i < 20; i++ {
-		err := db.AddSongAndIncrementUser(db.GetDB(), "Song1", 999, 2)
+		id := strconv.Itoa(1000 + i)
+		err := db.AddSongAndIncrementUser(db.GetDB(), "Song1", 999, 2, id)
 		assert.NoError(t, err)
 	}
 
