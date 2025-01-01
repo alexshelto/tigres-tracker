@@ -5,8 +5,14 @@ import (
 	"regexp"
 )
 
-// Function to extract user ID from a string
-// ex string: `Requested by: @joedale`
+const PancakeBotID = "239631525350604801"
+
+func IsFromPancakeBot(authorId string) bool {
+	return authorId == PancakeBotID
+}
+
+// extract user ID from a string
+// ex string: `Requested by: <@2142792696840213736>`
 func ExtractUserID(requestString string) string {
 	fmt.Printf("Received string: '%s'\n", requestString)
 	re := regexp.MustCompile(`<@(\d+)>`)
