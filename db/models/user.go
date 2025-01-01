@@ -6,9 +6,9 @@ import "gorm.io/gorm"
 type User struct {
 	gorm.Model
 
-	ID        uint `gorm:"primary_key"`
-	DiscordID uint `gorm:"unique;not null"` // Discord User ID
-	SongCount int  `gorm:"default:0"`
+	ID        uint   `gorm:"primary_key"`
+	DiscordID string `gorm:"unique;not null"` // Discord User ID
+	SongCount int    `gorm:"default:0"`
 }
 
 func (user *User) IncrementSongCount(db *gorm.DB) error {
@@ -20,7 +20,7 @@ func (user *User) IncrementSongCount(db *gorm.DB) error {
 }
 
 // Get or create a user by their DiscordID
-func GetOrCreateUser(db *gorm.DB, discordID uint) (*User, error) {
+func GetOrCreateUser(db *gorm.DB, discordID string) (*User, error) {
 	var user User
 	if err := db.Where("discord_id = ?", discordID).First(&user).Error; err != nil {
 		// If user doesn't exist, create one

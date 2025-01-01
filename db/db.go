@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/alexshelto/tigres-tracker/db/models"
+	"github.com/alexshelto/tigres-tracker/dto"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -23,14 +24,14 @@ func ConnectDB(databaseFile string) {
 		log.Fatal("Error during auto-migration: ", err)
 	}
 
-	fmt.Println("Database connected and tables migrated.")
+	log.Println("Database connected and tables migrated.")
 }
 
 func GetDB() *gorm.DB {
 	return DB
 }
 
-func AddSongAndIncrementUser(db *gorm.DB, songName string, guildId uint, requestedByID uint, messageId string) error {
+func AddSongAndIncrementUser(db *gorm.DB, songName string, guildId string, requestedByID string, messageId string) error {
 	song := models.Song{
 		SongName:    songName,
 		RequestedBy: requestedByID,
@@ -52,8 +53,6 @@ func AddSongAndIncrementUser(db *gorm.DB, songName string, guildId uint, request
 	if err := user.IncrementSongCount(db); err != nil {
 		return fmt.Errorf("error incrementing song count: %v", err)
 	}
-
-	log.Printf("Song '%s' added by user %d\n", songName, requestedByID)
 
 	return nil
 }
@@ -93,4 +92,31 @@ func TopSongsByUser(db *gorm.DB, userId uint, limit int) ([]models.Song, error) 
 	}
 
 	return songs, nil
+}
+
+func TopSongsInGuild(db *gorm.DB, guildId string, limit int) ([]dto.SongRequestCountDTO, error) {
+	var songCounts []dto.SongRequestCountDTO
+
+	err := db.Model(&models.Song{}).
+		Select("song_name, COUNT(*) as count").
+		Where("guild_id = ?", guildId).
+		Group("song_name").
+		Order("count DESC").
+		Limit(limit).
+		Find(&songCounts).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("error fetching top songs by guild: %v", err)
+	}
+
+	return songCounts, nil
+}
+
+func GetTotalSongsInGuild(db *gorm.DB, guildID string) (int64, error) {
+	var count int64
+	err := db.Table("songs").Where("guild_id = ?", guildID).Count(&count).Error
+	if err != nil {
+		return 0, fmt.Errorf("could not count songs in guild %v", err)
+	}
+	return count, nil
 }

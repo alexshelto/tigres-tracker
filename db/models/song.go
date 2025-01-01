@@ -5,10 +5,11 @@ import "gorm.io/gorm"
 type Song struct {
 	gorm.Model
 
-	SongName    string
-	RequestedBy uint   // Foreign key to User table (User id)
+	ID          uint   `gorm:"primaryKey"`
+	SongName    string `gorm:"not null"`
+	RequestedBy string `gorm:"not null"`        // Foreign key to User table (User id)
 	MessageID   string `gorm:"unique;not null"` // Unique message ID for deduplication
-	GuildId     uint   // Discord Server (Guild) ID where song was requested
+	GuildId     string `gorm:"not null"`        // Discord Server (Guild) ID where song was requested
 }
 
 func (song *Song) CreateSong(db *gorm.DB) error {

@@ -18,8 +18,8 @@ func TestAddSongAndIncrementUser(t *testing.T) {
 
 	// Test data
 	songName := "Test Song"
-	guildId := uint(999)
-	requestedByID := uint(1)
+	guildId := "999"
+	requestedByID := "1"
 
 	// Call AddSongAndIncrementUser function
 	err := db.AddSongAndIncrementUser(db.GetDB(), songName, guildId, requestedByID, "1")
@@ -57,11 +57,11 @@ func TestTopSongsByCount(t *testing.T) {
 	db.GetDB().AutoMigrate(&models.User{}, &models.Song{})
 
 	// Add some songs and increment song counts
-	err := db.AddSongAndIncrementUser(db.GetDB(), "Song1", 999, 12345, "1")
+	err := db.AddSongAndIncrementUser(db.GetDB(), "Song1", "999", "12345", "1")
 	assert.NoError(t, err)
-	err = db.AddSongAndIncrementUser(db.GetDB(), "Song1", 999, 12345, "2")
+	err = db.AddSongAndIncrementUser(db.GetDB(), "Song1", "999", "12345", "2")
 	assert.NoError(t, err)
-	err = db.AddSongAndIncrementUser(db.GetDB(), "Song2", 999, 123456, "3")
+	err = db.AddSongAndIncrementUser(db.GetDB(), "Song2", "999", "123456", "3")
 	assert.NoError(t, err)
 
 	// Fetch top songs by song count
@@ -81,24 +81,24 @@ func TestTopSongsByUser(t *testing.T) {
 	// Add some songs and increment song counts
 	for i := 0; i < 10; i++ {
 		id := strconv.Itoa(i)
-		err := db.AddSongAndIncrementUser(db.GetDB(), "SongA", 999, 1, id)
+		err := db.AddSongAndIncrementUser(db.GetDB(), "SongA", "999", "1", id)
 		assert.NoError(t, err)
 	}
 	for i := 0; i < 15; i++ {
 		id := strconv.Itoa(10 + i)
-		err := db.AddSongAndIncrementUser(db.GetDB(), "SongB", 999, 1, id)
+		err := db.AddSongAndIncrementUser(db.GetDB(), "SongB", "999", "1", id)
 		assert.NoError(t, err)
 	}
 	for i := 0; i < 5; i++ {
 		id := strconv.Itoa(100 + i)
-		err := db.AddSongAndIncrementUser(db.GetDB(), "SongC", 999, 1, id)
+		err := db.AddSongAndIncrementUser(db.GetDB(), "SongC", "999", "1", id)
 		assert.NoError(t, err)
 	}
 
 	// Different user
 	for i := 0; i < 20; i++ {
 		id := strconv.Itoa(1000 + i)
-		err := db.AddSongAndIncrementUser(db.GetDB(), "Song1", 999, 2, id)
+		err := db.AddSongAndIncrementUser(db.GetDB(), "Song1", "999", "2", id)
 		assert.NoError(t, err)
 	}
 
