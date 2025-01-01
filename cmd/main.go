@@ -77,6 +77,16 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		handleHelp(s, m)
 	} else if strings.HasPrefix(content, "t!chart") {
 		handleChart(s, m)
+	} else if strings.HasPrefix(content, "t!stats") {
+		// Extract the user mention if provided
+		line := strings.TrimSpace(m.Content[len("t!stats"):])
+		var userId string
+		if line == "" {
+			userId = m.Author.ID
+		} else {
+			userId = strings.Trim(line, "<@>")
+		}
+		handleStats(s, m, userId)
 	}
 
 	if len(m.Embeds) > 0 {
@@ -220,6 +230,43 @@ func handleChart(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	embed.Footer = &discordgo.MessageEmbedFooter{
 		Text: fmt.Sprintf("Total songs played in server: %d\n", totalSongs),
+	}
+
+	_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+	if err != nil {
+		log.Println("Error sending embed: ", err)
+	}
+}
+
+func handleStats(s *discordgo.Session, m *discordgo.MessageCreate, userId string) {
+	guildID := m.GuildID
+
+	userName, err := s.User(userId)
+	if err != nil {
+		log.Printf("Failed to get username for id: '%s' | %v", userId, err)
+	}
+
+	userStats, err := db.GetUserStats(db.GetDB(), userId, guildID)
+	if err != nil {
+		log.Println("Error getting user stats: ", err)
+		return
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Title: fmt.Sprintf("Top 5 Songs %s requested", userName),
+		Color: 0x00FF00,
+	}
+
+	for _, song := range userStats.TopSongs {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			Name:   song.SongName,
+			Value:  fmt.Sprintf("requests: %d", song.Count),
+			Inline: false,
+		})
+	}
+
+	embed.Footer = &discordgo.MessageEmbedFooter{
+		Text: fmt.Sprintf("Total songs requested in server: %d\n", userStats.TotalSongs),
 	}
 
 	_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)

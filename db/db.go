@@ -94,6 +94,33 @@ func TopSongsByUser(db *gorm.DB, userId uint, limit int) ([]models.Song, error) 
 	return songs, nil
 }
 
+func GetUserStats(db *gorm.DB, userId string, guildId string) (dto.UserStatsDTO, error) {
+	var userStats dto.UserStatsDTO
+
+	// Get Total Number of songs queued by the user in the guild
+	err := db.Model(&models.Song{}).
+		Where("requested_by = ? AND guild_id = ?", userId, guildId).
+		Count(&userStats.TotalSongs).Error
+
+	if err != nil {
+		return userStats, fmt.Errorf("could not get the total songs for user :%v", err)
+	}
+
+	err = db.Model(&models.Song{}).
+		Select("song_name, COUNT(*) as count").
+		Where("requested_by = ? AND guild_id = ?", userId, guildId).
+		Group("song_name").
+		Order("count DESC").
+		Limit(5).
+		Scan(&userStats.TopSongs).Error
+
+	if err != nil {
+		return userStats, fmt.Errorf("could not get top songs for user: %v", err)
+	}
+
+	return userStats, nil
+}
+
 func TopSongsInGuild(db *gorm.DB, guildId string, limit int) ([]dto.SongRequestCountDTO, error) {
 	var songCounts []dto.SongRequestCountDTO
 
