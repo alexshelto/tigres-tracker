@@ -18,7 +18,7 @@ type DBConfig struct {
 func LoadDBConfig() *DBConfig {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatalf("Error loading .env file: '%v'", err)
 	}
 
 	databaseFile := os.Getenv("DATABASE_FILE")
@@ -35,7 +35,7 @@ func LoadDBConfig() *DBConfig {
 func LoadBotConfig() *BotConfig {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatalf("Error loading .env file: '%v'", err)
 	}
 
 	botToken := os.Getenv("BOT_TOKEN")

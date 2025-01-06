@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"regexp"
 )
 
@@ -14,7 +13,6 @@ func IsFromPancakeBot(authorId string) bool {
 // extract user ID from a string
 // ex string: `Requested by: <@2142792696840213736>`
 func ExtractUserID(requestString string) string {
-	fmt.Printf("Received string: '%s'\n", requestString)
 	re := regexp.MustCompile(`<@(\d+)>`)
 	matches := re.FindStringSubmatch(requestString)
 	if len(matches) > 1 {
