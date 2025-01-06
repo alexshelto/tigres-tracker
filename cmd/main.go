@@ -14,11 +14,6 @@ import (
 	"github.com/alexshelto/tigres-tracker/internal/handler"
 )
 
-/*
-pancake ID
-239631525350604801
-*/
-
 type Flags struct {
 	ChannelID string
 }
@@ -60,51 +55,7 @@ func main() {
 	defer dg.Close()
 }
 
-// messageCreate is called whenever a new message is created
-// func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-// 	if m.Author.ID == s.State.User.ID {
-// 		return
-// 	}
-
-// 	// Listen to messages from pancake bot for songs starting
-// 	// handle embedded and return
-// 	if utils.IsFromPancakeBot(m.Author.ID) {
-// 		ProcessMessageFromPancakeBot(m)
-// 		return
-// 	}
-
-// 	handlers.HandleCommands(s, m)
-// }
-
 /*
-
-
-func ProcessMessageFromPancakeBot(m *discordgo.MessageCreate) {
-	if len(m.Embeds) > 0 {
-		for _, embed := range m.Embeds {
-			handleEmbed(embed, m.GuildID, m.ID)
-		}
-	}
-}
-
-func handleEmbed(embed *discordgo.MessageEmbed, guildId string, messageId string) {
-	songInfo := utils.ProcessEmbedDataForNowPlaying(embed)
-	if songInfo != nil {
-		log.Printf("Parsed song info: %+v\n", songInfo)
-
-		err := db.AddSongAndIncrementUser(db.GetDB(), songInfo.Name, guildId, songInfo.RequestedBy, messageId)
-
-		if err != nil {
-			log.Printf("Error saving song info to DB: %v\n", err)
-		} else {
-			log.Printf(
-				"saved song '%s' requested by user id '%s' in guild: '%s' with message ID '%s'",
-				songInfo.Name, songInfo.RequestedBy, guildId, messageId,
-			)
-		}
-	}
-}
-
 func hydrateMessageHistory(s *discordgo.Session, channelID string) {
 	channel, err := s.Channel(channelID)
 	if err != nil {

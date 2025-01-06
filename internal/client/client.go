@@ -3,12 +3,14 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"time"
 
 	"github.com/alexshelto/tigres-tracker/config"
+	"github.com/alexshelto/tigres-tracker/dto"
 )
 
 type APIClient struct {
@@ -58,4 +60,36 @@ func (c *APIClient) PostSongPlay(userID, songName, guildID string) ([]byte, erro
 	}
 
 	return body, nil
+}
+
+func (c *APIClient) GetTopSongsInGuild(guildID string, limit int) ([]dto.SongRequestCountDTO, error) {
+	url := fmt.Sprintf("%s/song/top?guild_id=%s&limit=%d", c.BaseURL, guildID, limit)
+
+	// Make the GET request
+	resp, err := c.HTTPClient.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("error making GET request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check for non-2xx status codes
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Unexpected status code: %d\n", resp.StatusCode)
+		return nil, errors.New("unexpected error")
+	}
+	// Parse response body
+
+	var songs []dto.SongRequestCountDTO
+	err = parseResponseBody(resp.Body, &songs)
+	if err != nil {
+		fmt.Println("Error parsing response body:", err)
+		return nil, errors.New("could not parse body")
+	}
+
+	return songs, nil
+}
+
+func parseResponseBody(body io.Reader, target interface{}) error {
+	decoder := json.NewDecoder(body)
+	return decoder.Decode(target)
 }

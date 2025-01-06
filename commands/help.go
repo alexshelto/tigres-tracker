@@ -1,6 +1,5 @@
 package commands
 
-/*
 import (
 	"github.com/bwmarrin/discordgo"
 )
@@ -16,5 +15,3 @@ func HandleHelp(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Send the response to the channel
 	s.ChannelMessageSend(m.ChannelID, response)
 }
-
-*/

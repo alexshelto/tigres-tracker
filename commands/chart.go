@@ -1,11 +1,20 @@
 package commands
 
-// Handle the t!chart command
 /*
-func HandleChart(s *discordgo.Session, m *discordgo.MessageCreate, database *gorm.DB) {
+import (
+	"fmt"
+	"log"
+
+	"github.com/bwmarrin/discordgo"
+)
+
+// Handle the t!chart command
+func HandleChart(s *discordgo.Session, m *discordgo.MessageCreate) {
 	guildID := m.GuildID
 
 	// Query the top 10 songs in the guild
+	topSongs, err :=
+
 	topSongs, err := db.TopSongsInGuild(database, guildID, 10) // Replace with your actual query logic
 	if err != nil {
 		log.Println("Error geting top songs in guild: ", err)

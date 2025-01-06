@@ -1,9 +1,11 @@
 package service
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
+	"github.com/alexshelto/tigres-tracker/commands"
 	"github.com/alexshelto/tigres-tracker/internal/client"
 	"github.com/alexshelto/tigres-tracker/utils"
 	"github.com/bwmarrin/discordgo"
@@ -35,6 +37,51 @@ func (s *MessageService) HandleMessage(ses *discordgo.Session, m *discordgo.Mess
 			}
 		}
 	}
+
+	s.HandleCommands(ses, m)
+}
+
+func (s *MessageService) HandleCommands(ses *discordgo.Session, m *discordgo.MessageCreate) {
+	content := strings.ToLower(m.Content)
+
+	switch {
+	case strings.HasPrefix(content, "t!help"):
+		commands.HandleHelp(ses, m)
+	case strings.HasPrefix(content, "t!chart"):
+		s.HandleChart(ses, m)
+		/*
+			case strings.HasPrefix(content, "t!stats"):
+				HandleStatsCommand(s, m)
+		*/
+	}
+}
+
+func (s *MessageService) HandleChart(ses *discordgo.Session, m *discordgo.MessageCreate) {
+	guildID := m.GuildID
+	topSongs, err := s.Client.GetTopSongsInGuild(guildID, 10)
+
+	if err != nil {
+		log.Println("Error geting top songs in guild: ", err)
+		return
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Title: "Top 10 Songs in the Server",
+		Color: 0x00FF00,
+	}
+	for _, song := range topSongs {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			Name:   song.SongName,
+			Value:  fmt.Sprintf("Plays: %d", song.Count),
+			Inline: false,
+		})
+	}
+
+	_, err = ses.ChannelMessageSendEmbed(m.ChannelID, embed)
+	if err != nil {
+		log.Println("Error sending embed: ", err)
+	}
+
 }
 
 func ProcessNowPlayingMessageFromPancakeBot(m *discordgo.MessageCreate) []*utils.ParsedSongInfo {

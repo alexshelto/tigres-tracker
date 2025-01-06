@@ -1,4 +1,1 @@
-// Restructure code
-// Testing around queries and mock message handling
-// New DB
-// Deploys
+add other command handling
