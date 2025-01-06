@@ -1,14 +1,7 @@
 package commands
 
-import (
-	"fmt"
-	"github.com/alexshelto/tigres-tracker/db"
-	"github.com/bwmarrin/discordgo"
-	"gorm.io/gorm"
-	"log"
-)
-
 // Handle the t!chart command
+/*
 func HandleChart(s *discordgo.Session, m *discordgo.MessageCreate, database *gorm.DB) {
 	guildID := m.GuildID
 
@@ -46,3 +39,4 @@ func HandleChart(s *discordgo.Session, m *discordgo.MessageCreate, database *gor
 		log.Println("Error sending embed: ", err)
 	}
 }
+*/

@@ -10,16 +10,12 @@ import (
 	"log"
 
 	"github.com/alexshelto/tigres-tracker/config"
-	"github.com/alexshelto/tigres-tracker/db"
-	"github.com/alexshelto/tigres-tracker/handlers"
-	"github.com/alexshelto/tigres-tracker/utils"
+	"github.com/alexshelto/tigres-tracker/internal/client"
+	"github.com/alexshelto/tigres-tracker/internal/handler"
 )
 
 /*
-
 pancake ID
-239631525350604801
-239631525350604801
 239631525350604801
 */
 
@@ -33,9 +29,7 @@ func main() {
 	flag.Parse()
 
 	botConfig := config.LoadBotConfig()
-	dbConfig := config.LoadDBConfig()
-
-	db.ConnectDB(dbConfig.DatabaseFile)
+	clientConfig := config.LoadClientConfig()
 
 	// Create new Discord Session
 	dg, err := discordgo.New("Bot " + botConfig.BotToken)
@@ -43,13 +37,13 @@ func main() {
 		log.Fatal("Error creating Discord session: ", err)
 	}
 
+	client := client.NewClient(clientConfig)
+	handler.InitHandlers(dg, client)
+
 	if flags.ChannelID != "" {
-		hydrateMessageHistory(dg, flags.ChannelID)
+		//hydrateMessageHistory(dg, flags.ChannelID)
 		return
 	}
-
-	// Register the messageCreate func as a fallback for MessageCreate events
-	dg.AddHandler(messageCreate)
 
 	dg.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
 
@@ -67,20 +61,23 @@ func main() {
 }
 
 // messageCreate is called whenever a new message is created
-func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
+// func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+// 	if m.Author.ID == s.State.User.ID {
+// 		return
+// 	}
 
-	// Listen to messages from pancake bot for songs starting
-	// handle embedded and return
-	if utils.IsFromPancakeBot(m.Author.ID) {
-		ProcessMessageFromPancakeBot(m)
-		return
-	}
+// 	// Listen to messages from pancake bot for songs starting
+// 	// handle embedded and return
+// 	if utils.IsFromPancakeBot(m.Author.ID) {
+// 		ProcessMessageFromPancakeBot(m)
+// 		return
+// 	}
 
-	handlers.HandleCommands(s, m)
-}
+// 	handlers.HandleCommands(s, m)
+// }
+
+/*
+
 
 func ProcessMessageFromPancakeBot(m *discordgo.MessageCreate) {
 	if len(m.Embeds) > 0 {
@@ -140,3 +137,4 @@ func hydrateMessageHistory(s *discordgo.Session, channelID string) {
 		lastMessageID = messages[len(messages)-1].ID
 	}
 }
+*/

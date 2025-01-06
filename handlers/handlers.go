@@ -1,11 +1,11 @@
 package handlers
 
+/*
 import (
 	"log"
 	"strings"
 
 	"github.com/alexshelto/tigres-tracker/commands"
-	"github.com/alexshelto/tigres-tracker/db"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -35,3 +35,5 @@ func HandleStatsCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	commands.HandleStats(s, m, userId, db.GetDB())
 }
+
+*/

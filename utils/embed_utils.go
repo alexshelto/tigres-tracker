@@ -9,6 +9,7 @@ import (
 type ParsedSongInfo struct {
 	Name        string
 	RequestedBy string
+	GuildID     string
 }
 
 // process embed message from Pancake Bot and extract song information

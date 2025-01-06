@@ -1,5 +1,6 @@
 package commands
 
+/*
 import (
 	"fmt"
 	"github.com/alexshelto/tigres-tracker/db"
@@ -44,3 +45,4 @@ func HandleStats(s *discordgo.Session, m *discordgo.MessageCreate, userId string
 		log.Println("Error sending embed: ", err)
 	}
 }
+*/
