@@ -20,3 +20,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Call the service to handle the message
 	messageService.HandleMessage(s, m)
 }
+
+func HydrateHistory(s *discordgo.Session, channelID string) {
+	messageService.HydratePancakeNowPlayingHistoryFromChannelID(s, channelID)
+}

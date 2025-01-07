@@ -29,7 +29,7 @@ func (s *MessageService) HandleMessage(ses *discordgo.Session, m *discordgo.Mess
 	}
 
 	if utils.IsFromPancakeBot(m.Author.ID) {
-		songsToPost := ProcessNowPlayingMessageFromPancakeBot(m)
+		songsToPost := ProcessNowPlayingMessageFromPancakeBot(m.Message)
 		for _, request := range songsToPost {
 			_, err := s.Client.PostSongPlay(request.RequestedBy, request.Name, request.GuildID)
 			if err != nil {
@@ -41,6 +41,61 @@ func (s *MessageService) HandleMessage(ses *discordgo.Session, m *discordgo.Mess
 	s.HandleCommands(ses, m)
 }
 
+func (s *MessageService) HydratePancakeNowPlayingHistoryFromChannelID(ses *discordgo.Session, channelID string) {
+	channel, err := ses.Channel(channelID)
+	if err != nil {
+		log.Fatalf("error fetching channel: %v", err)
+		return
+	}
+
+	var lastMessageID string
+
+	for {
+		messages, err := ses.ChannelMessages(channelID, 100, lastMessageID, "", "")
+		if err != nil {
+			log.Fatalf("error fetching messages: %v", err)
+			return
+		}
+
+		if len(messages) == 0 {
+			log.Println("No more messages to process.")
+			break
+		}
+
+		// Process each message
+		for _, m := range messages {
+			if utils.IsFromPancakeBot(m.Author.ID) {
+				songsToPost := ProcessNowPlayingMessageFromPancakeBot(m)
+				for _, request := range songsToPost {
+					// This isnt kept for history
+					request.GuildID = channel.GuildID
+
+					log.Printf("Hydrating song: %s by %s in guild %s", request.Name, request.RequestedBy, request.GuildID)
+					_, err := s.Client.PostSongPlay(request.RequestedBy, request.Name, request.GuildID)
+					if err != nil {
+						log.Fatalf("Failed to POST new song: %+v", request)
+					}
+				}
+			}
+			lastMessageID = messages[len(messages)-1].ID
+		}
+	}
+}
+
+func ProcessNowPlayingMessageFromPancakeBot(m *discordgo.Message) []*utils.ParsedSongInfo {
+	var songInfos []*utils.ParsedSongInfo
+
+	if len(m.Embeds) > 0 {
+		for _, embed := range m.Embeds {
+			parsedInfo := handleEmbeddedNowPlaying(embed, m.GuildID)
+			if parsedInfo != nil {
+				songInfos = append(songInfos, parsedInfo)
+			}
+		}
+	}
+	return songInfos
+}
+
 func (s *MessageService) HandleCommands(ses *discordgo.Session, m *discordgo.MessageCreate) {
 	content := strings.ToLower(m.Content)
 
@@ -48,20 +103,24 @@ func (s *MessageService) HandleCommands(ses *discordgo.Session, m *discordgo.Mes
 	case strings.HasPrefix(content, "t!help"):
 		commands.HandleHelp(ses, m)
 	case strings.HasPrefix(content, "t!chart"):
-		s.HandleChart(ses, m)
-		/*
-			case strings.HasPrefix(content, "t!stats"):
-				HandleStatsCommand(s, m)
-		*/
+		s.HandleChartCommand(ses, m)
+	case strings.HasPrefix(content, "t!stats"):
+		s.HandleStatsCommand(ses, m)
 	}
 }
 
-func (s *MessageService) HandleChart(ses *discordgo.Session, m *discordgo.MessageCreate) {
+func (s *MessageService) HandleChartCommand(ses *discordgo.Session, m *discordgo.MessageCreate) {
 	guildID := m.GuildID
 	topSongs, err := s.Client.GetTopSongsInGuild(guildID, 10)
 
 	if err != nil {
-		log.Println("Error geting top songs in guild: ", err)
+		log.Println("error retrieving top songs in guild", err)
+		return
+	}
+
+	totalSongs, err := s.Client.GetTotalSongPlaysInGuild(guildID)
+	if err != nil {
+		log.Println("error geting total songs in guild", err)
 		return
 	}
 
@@ -77,25 +136,66 @@ func (s *MessageService) HandleChart(ses *discordgo.Session, m *discordgo.Messag
 		})
 	}
 
+	embed.Footer = &discordgo.MessageEmbedFooter{
+		Text: fmt.Sprintf("Total songs played in the server: %d\n", totalSongs.TotalPlays),
+	}
+
 	_, err = ses.ChannelMessageSendEmbed(m.ChannelID, embed)
 	if err != nil {
 		log.Println("Error sending embed: ", err)
 	}
-
 }
 
-func ProcessNowPlayingMessageFromPancakeBot(m *discordgo.MessageCreate) []*utils.ParsedSongInfo {
-	var songInfos []*utils.ParsedSongInfo
+func (s *MessageService) HandleStatsCommand(ses *discordgo.Session, m *discordgo.MessageCreate) {
+	guildID := m.GuildID
 
-	if len(m.Embeds) > 0 {
-		for _, embed := range m.Embeds {
-			parsedInfo := handleEmbeddedNowPlaying(embed, m.GuildID)
-			if parsedInfo != nil {
-				songInfos = append(songInfos, parsedInfo)
-			}
-		}
+	line := strings.TrimSpace(m.Content[len("t!stats"):])
+	var userID string
+	if line == "" {
+		userID = m.Author.ID
+	} else {
+		userID = strings.Trim(line, "<@>")
 	}
-	return songInfos
+
+	userName, err := ses.User(userID)
+	if err != nil {
+		log.Printf("Failed to get username for id: '%s' | %v", userID, err)
+	}
+
+	topSongs, err := s.Client.GetTopSongsByUserInGuild(userID, guildID, 10)
+
+	if err != nil {
+		log.Println("Error getting user stats: ", err)
+		return
+	}
+
+	totalSongs, err := s.Client.GetTotalUserSongPlaysInGuild(userID, guildID)
+	if err != nil {
+		log.Println("error geting total songs in guild", err)
+		return
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Title: fmt.Sprintf("Top 10 Songs %s requested", userName),
+		Color: 0x00FF00,
+	}
+
+	for _, song := range topSongs {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			Name:   song.SongName,
+			Value:  fmt.Sprintf("requests: %d", song.Count),
+			Inline: false,
+		})
+	}
+
+	embed.Footer = &discordgo.MessageEmbedFooter{
+		Text: fmt.Sprintf("Total songs requested in server: %d\n", totalSongs.TotalPlays),
+	}
+
+	_, err = ses.ChannelMessageSendEmbed(m.ChannelID, embed)
+	if err != nil {
+		log.Println("Error sending embed: ", err)
+	}
 }
 
 func handleEmbeddedNowPlaying(embed *discordgo.MessageEmbed, guildID string) *utils.ParsedSongInfo {

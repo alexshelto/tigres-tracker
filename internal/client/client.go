@@ -89,6 +89,85 @@ func (c *APIClient) GetTopSongsInGuild(guildID string, limit int) ([]dto.SongReq
 	return songs, nil
 }
 
+func (c *APIClient) GetTopSongsByUserInGuild(userID string, guildID string, limit int) ([]dto.SongRequestCountDTO, error) {
+	url := fmt.Sprintf("%s/user/%s/song/top?guild_id=%s&limit=%d", c.BaseURL, userID, guildID, limit)
+
+	// Make the GET request
+	resp, err := c.HTTPClient.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("error making GET request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check for non-2xx status codes
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Unexpected status code: %d\n", resp.StatusCode)
+		return nil, errors.New("unexpected error")
+	}
+	// Parse response body
+
+	var songs []dto.SongRequestCountDTO
+	err = parseResponseBody(resp.Body, &songs)
+	if err != nil {
+		fmt.Println("Error parsing response body:", err)
+		return nil, errors.New("could not parse body")
+	}
+
+	return songs, nil
+}
+
+func (c *APIClient) GetTotalSongPlaysInGuild(guildID string) (dto.TotalSongPlayDTO, error) {
+	url := fmt.Sprintf("%s/song/count?guild_id=%s", c.BaseURL, guildID)
+
+	resp, err := c.HTTPClient.Get(url)
+	if err != nil {
+		return dto.TotalSongPlayDTO{}, fmt.Errorf("error making GET request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check for non-2xx status codes
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Unexpected status code: %d\n", resp.StatusCode)
+		return dto.TotalSongPlayDTO{}, errors.New("unexpected error")
+	}
+
+	var total dto.TotalSongPlayDTO
+	err = parseResponseBody(resp.Body, &total)
+
+	if err != nil {
+		fmt.Println("Error parsing response body:", err)
+		return total, errors.New("could not parse body")
+	}
+
+	return total, nil
+}
+
+func (c *APIClient) GetTotalUserSongPlaysInGuild(userID string, guildID string) (dto.TotalSongPlayDTO, error) {
+	url := fmt.Sprintf("%s/user/%s/song/count?guild_id=%s", c.BaseURL, userID, guildID)
+
+	resp, err := c.HTTPClient.Get(url)
+	if err != nil {
+		return dto.TotalSongPlayDTO{}, fmt.Errorf("error making GET request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check for non-2xx status codes
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Unexpected status code: %d\n", resp.StatusCode)
+		return dto.TotalSongPlayDTO{}, errors.New("unexpected error")
+	}
+
+	var total dto.TotalSongPlayDTO
+	err = parseResponseBody(resp.Body, &total)
+
+	if err != nil {
+		fmt.Println("Error parsing response body:", err)
+		return total, errors.New("could not parse body")
+	}
+
+	return total, nil
+}
+
 func parseResponseBody(body io.Reader, target interface{}) error {
 	decoder := json.NewDecoder(body)
 	return decoder.Decode(target)

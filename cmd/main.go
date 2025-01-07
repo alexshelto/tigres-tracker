@@ -36,7 +36,7 @@ func main() {
 	handler.InitHandlers(dg, client)
 
 	if flags.ChannelID != "" {
-		//hydrateMessageHistory(dg, flags.ChannelID)
+		handler.HydrateHistory(dg, flags.ChannelID)
 		return
 	}
 
@@ -54,38 +54,3 @@ func main() {
 
 	defer dg.Close()
 }
-
-/*
-func hydrateMessageHistory(s *discordgo.Session, channelID string) {
-	channel, err := s.Channel(channelID)
-	if err != nil {
-		log.Fatalf("error fetching channel: %v", err)
-		return
-	}
-
-	var lastMessageID string
-
-	for {
-		messages, err := s.ChannelMessages(channelID, 100, lastMessageID, "", "")
-		if err != nil {
-			log.Fatalf("error fetching messages: %v", err)
-			return
-		}
-
-		if len(messages) == 0 {
-			log.Println("No more messages to process.")
-			break
-		}
-
-		// Process each message
-		for _, m := range messages {
-			if len(m.Embeds) > 0 {
-				for _, embed := range m.Embeds {
-					handleEmbed(embed, channel.GuildID, m.ID)
-				}
-			}
-		}
-		lastMessageID = messages[len(messages)-1].ID
-	}
-}
-*/
