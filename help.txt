@@ -1,0 +1,6 @@
+
+# Bring down 1
+docker-compose stop <name>
+
+# back up
+docker-compose up <name>
