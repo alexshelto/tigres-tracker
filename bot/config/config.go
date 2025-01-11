@@ -40,6 +40,8 @@ func LoadClientConfig() ClientConfig {
 
 	host := os.Getenv("BASE_URL")
 
+	log.Println("Current Host: ", host)
+
 	if host == "" {
 		log.Fatal("Bot token is not set. Please provide BOT_TOKEN environment variable")
 	}
